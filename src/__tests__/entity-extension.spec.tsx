@@ -86,4 +86,16 @@ describe('entity-extension', () => {
 			expect(actual[0].name).toEqual(item1.name);
 		});
 	});
+
+	describe('createEntity', () => {
+		it('creates an entity', () => {
+			add(doc(p('')));
+
+			const item = { id: '1', name: 'Name 1' };
+			commands.createEntity(item);
+
+			const actual = helpers.getUniqueEntities();
+			expect(actual).toEqual([item]);
+		});
+	});
 });

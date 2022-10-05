@@ -4,6 +4,7 @@ import {
 	useCommands,
 	useRemirror,
 } from '@remirror/react';
+import { uniqueId } from 'remirror';
 import 'remirror/styles/all.css';
 
 import { EntityExtension } from '../../src';
@@ -27,6 +28,7 @@ const CONTENT = `
 <p>And repeated: ${fruit(Fruit.apple)}, ${fruit(Fruit.orange)}, ${fruit(
 	Fruit.pear,
 )}</p>
+<p></p>
 `;
 
 let counter = 1;
@@ -38,6 +40,17 @@ function EditButton({ id }: { id: Fruit }) {
 	};
 
 	return <button onClick={handleClick}>Change {id}</button>;
+}
+
+function NewButton() {
+	const { createEntity } = useCommands<EntityExtension>();
+
+	const handleClick = () => {
+		const id = uniqueId();
+		createEntity({ id, name: `New ${id}` });
+	};
+
+	return <button onClick={handleClick}>Add new</button>;
 }
 
 export const Basic = () => {
@@ -54,8 +67,12 @@ export const Basic = () => {
 				&nbsp;
 				<div>
 					<EditButton id={Fruit.apple} />
+					&nbsp;
 					<EditButton id={Fruit.orange} />
+					&nbsp;
 					<EditButton id={Fruit.pear} />
+					&nbsp;
+					<NewButton />
 				</div>
 			</Remirror>
 		</div>

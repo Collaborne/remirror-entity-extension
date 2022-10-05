@@ -244,6 +244,16 @@ export class EntityExtension extends NodeExtension<EntityOptions> {
 	}
 
 	@command()
+	createEntity(attributes: EntityAttrs): CommandFunction {
+		return ({ tr, dispatch }) => {
+			const entity = this.type.create(attributes);
+			dispatch?.(tr.replaceSelectionWith(entity));
+
+			return true;
+		};
+	}
+
+	@command()
 	updateEntityInPosition(
 		pos: number,
 		attributes: EntityAttrs,

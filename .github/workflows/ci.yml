@@ -10,6 +10,6 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-      - run: npm ci --unsafe-perm
+      - run: npm ci --unsafe-perm --legacy-peer-deps
       - run: npm run build
       - run: npm test

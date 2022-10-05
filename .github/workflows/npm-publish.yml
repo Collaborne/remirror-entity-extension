@@ -14,7 +14,7 @@ jobs:
         with:
           node-version: 18
           registry-url: https://registry.npmjs.org/
-      - run: npm ci --unsafe-perm
+      - run: npm ci --unsafe-perm --legacy-peer-deps
       - run: npm run build
       - run: npm test
       - name: Publish to NPM

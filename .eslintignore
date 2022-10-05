@@ -1,0 +1,7 @@
+build/
+dist/
+node_modules/
+.snapshots/
+*.min.js
+# See https://github.com/eslint/eslint/issues/12348#issuecomment-536946429
+!.storybook

@@ -27,9 +27,9 @@
 	},
 	"peerDependencies": {
 		"@remirror/pm": "^2.0.0",
-		"@remirror/react": "^2.0.9",
+		"@remirror/react": "^2.0.0",
 		"react": "^17.0.0 || ^18.0.0",
-		"remirror": "^2.0.9"
+		"remirror": "^2.0.0"
 	},
 	"devDependencies": {
 		"@emotion/react": "^11.10.4",

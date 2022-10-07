@@ -49,6 +49,10 @@ const getUniqueEntitiesFromPluginState = (props: StateProps): EntityAttrs[] => {
 	return pluginState.uniqueEntities;
 };
 
+// Check equality of values to preserve identity of array to prevent unnecessary rerenders by the caller
+function isSame<T>(array: T[], newArray: T[]) {
+	return hash(newArray) === hash(array);
+}
 export interface StateProps {
 	extension: EntityExtension;
 	state: EditorState;
@@ -110,7 +114,7 @@ export class EntityExtension extends NodeExtension<EntityOptions> {
 					}
 
 					const entities = this.getAllEntitiesFromDoc(newState.doc);
-					if (hash(entities) === hash(oldEntityState.entities)) {
+					if (isSame(entities, oldEntityState.entities)) {
 						// No changes
 						return oldEntityState;
 					}
@@ -118,7 +122,7 @@ export class EntityExtension extends NodeExtension<EntityOptions> {
 					let uniqueEntities = computeUniqueEntities(entities);
 
 					// Preserve identity of array to prevent unnecessary rerenders by the caller
-					if (hash(uniqueEntities) === hash(oldEntityState.uniqueEntities)) {
+					if (isSame(uniqueEntities, oldEntityState.uniqueEntities)) {
 						// Preserve array instance
 						uniqueEntities = oldEntityState.uniqueEntities;
 					}

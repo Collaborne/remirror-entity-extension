@@ -12,6 +12,7 @@ import {
 	NodeExtension,
 	NodeExtensionSpec,
 	NodeSpecOverride,
+	NodeWithPosition,
 	omitExtraAttributes,
 	Transaction,
 } from '@remirror/core';
@@ -208,7 +209,11 @@ export class EntityExtension extends NodeExtension<EntityOptions> {
 				return true;
 			}
 
-			const entities = this.getAllEntitiesFromDoc(tr.doc);
+			const nodes = this.getAllEntityNodesFromDoc(tr.doc);
+			const entities: EntityWithPosition[] = nodes.map(({ node, pos }) => ({
+				...node.attrs,
+				pos,
+			}));
 			const sameEntitiesId = entities.filter(entity => entity.id === id);
 
 			if (sameEntitiesId.length === 0) {
@@ -223,13 +228,16 @@ export class EntityExtension extends NodeExtension<EntityOptions> {
 		};
 	}
 
-	protected getAllEntitiesFromDoc(doc?: Node): EntityAttrs[] {
+	private getAllEntityNodesFromDoc(doc?: Node): NodeWithPosition[] {
 		const node = doc ?? this.store.getState().doc;
-		const entityNodes = findInlineNodes({
+		return findInlineNodes({
 			node,
 		}).filter(inlineNode => inlineNode.node.type.name === this.name);
+	}
 
-		const entities = entityNodes.map(({ node }) => ({
+	private getAllEntitiesFromDoc(doc?: Node): EntityAttrs[] {
+		const nodes = this.getAllEntityNodesFromDoc(doc);
+		const entities = nodes.map(({ node }) => ({
 			...node.attrs,
 		}));
 

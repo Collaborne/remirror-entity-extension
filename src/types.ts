@@ -14,8 +14,6 @@ export interface EntityOptions {
 	render: RenderEntity;
 }
 
-export type EntitysKey = string;
-
 export interface EntityAttrs {
 	id?: string;
 	name?: string;
@@ -26,5 +24,6 @@ export type EntityId = string;
 export type EntityWithPosition = EntityAttrs & { pos: number };
 
 export interface EntityState {
-	[entitys: EntitysKey]: EntityAttrs[];
+	entities: EntityAttrs[];
+	uniqueEntities: EntityAttrs[];
 }

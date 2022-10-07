@@ -13,7 +13,7 @@ interface Item {
 export function EntityComponent({ id, getPosition }: EntityComponentProps) {
 	const position = typeof getPosition === 'function' && getPosition();
 
-	const { getUniqueEntities } = useHelpers<EntityExtension>(true);
+	const { getUniqueEntities } = useHelpers<EntityExtension>();
 	const { updateEntityInPosition } = useCommands<EntityExtension>();
 
 	const uniqueEntities = getUniqueEntities();

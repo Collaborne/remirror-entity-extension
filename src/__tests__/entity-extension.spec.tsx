@@ -24,11 +24,7 @@ describe('entity-extension', () => {
 			add(doc(p(entity(item1)(), entity(item2)(), entity(item1)())));
 
 			const actual = helpers.getAllEntityNodesAttrs();
-			expect(actual).toEqual([
-				{ ...item1, pos: 1 },
-				{ ...item2, pos: 2 },
-				{ ...item1, pos: 3 },
-			]);
+			expect(actual).toEqual([item1, item2, item1]);
 		});
 	});
 

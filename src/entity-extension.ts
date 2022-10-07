@@ -12,6 +12,7 @@ import {
 	NodeExtension,
 	NodeExtensionSpec,
 	NodeSpecOverride,
+	NodeWithPosition,
 	omitExtraAttributes,
 	Transaction,
 } from '@remirror/core';
@@ -41,9 +42,28 @@ const getEntitiesFromPluginState = (
 	return pluginState.entities;
 };
 
+const getUniqueEntitiesFromPluginState = (props: StateProps): EntityAttrs[] => {
+	const { extension, state } = props;
+	const pluginState: { uniqueEntities: EntityAttrs[] } =
+		extension.getPluginState(state);
+	return pluginState.uniqueEntities;
+};
+
+// Check equality of values to preserve identity of array to prevent unnecessary rerenders by the caller
+function isSame<T>(array: T[], newArray: T[]) {
+	return hash(newArray) === hash(array);
+}
 export interface StateProps {
 	extension: EntityExtension;
 	state: EditorState;
+}
+
+function computeUniqueEntities(entities: EntityAttrs[]) {
+	const uniqueEntitiesById = new Map<string, EntityAttrs>();
+	entities.forEach(({ id, name }) => {
+		uniqueEntitiesById.set(id!, { id, name });
+	});
+	return [...uniqueEntitiesById.values()];
 }
 
 /**
@@ -55,8 +75,6 @@ export interface StateProps {
 	},
 })
 export class EntityExtension extends NodeExtension<EntityOptions> {
-	private uniqueEntities: EntityAttrs[] = [];
-
 	get name() {
 		return 'entity';
 	}
@@ -80,18 +98,36 @@ export class EntityExtension extends NodeExtension<EntityOptions> {
 			state: {
 				init: (_: EditorStateConfig, state: EditorState): EntityState => {
 					const entities = this.getAllEntitiesFromDoc(state.doc);
-					return { entities };
+					const uniqueEntities = computeUniqueEntities(entities);
+					return { entities, uniqueEntities };
 				},
 
 				apply: (
-					_tr: Transaction,
-					_value: EntityState,
+					tr: Transaction,
+					oldEntityState: EntityState,
 					_oldState: EditorState,
 					newState: EditorState,
 				): EntityState => {
-					const entities = this.getAllEntitiesFromDoc(newState.doc);
+					if (!tr.steps) {
+						// Moving the cursor won't impact entities
+						return oldEntityState;
+					}
 
-					return { entities };
+					const entities = this.getAllEntitiesFromDoc(newState.doc);
+					if (isSame(entities, oldEntityState.entities)) {
+						// No changes
+						return oldEntityState;
+					}
+
+					let uniqueEntities = computeUniqueEntities(entities);
+
+					// Preserve identity of array to prevent unnecessary rerenders by the caller
+					if (isSame(uniqueEntities, oldEntityState.uniqueEntities)) {
+						// Preserve array instance
+						uniqueEntities = oldEntityState.uniqueEntities;
+					}
+
+					return { entities, uniqueEntities };
 				},
 			},
 		};
@@ -176,7 +212,11 @@ export class EntityExtension extends NodeExtension<EntityOptions> {
 				return true;
 			}
 
-			const entities = this.getAllEntitiesFromDoc(tr.doc);
+			const nodes = this.getAllEntityNodesFromDoc(tr.doc);
+			const entities: EntityWithPosition[] = nodes.map(({ node, pos }) => ({
+				...node.attrs,
+				pos,
+			}));
 			const sameEntitiesId = entities.filter(entity => entity.id === id);
 
 			if (sameEntitiesId.length === 0) {
@@ -191,15 +231,17 @@ export class EntityExtension extends NodeExtension<EntityOptions> {
 		};
 	}
 
-	protected getAllEntitiesFromDoc(doc?: Node): EntityWithPosition[] {
+	private getAllEntityNodesFromDoc(doc?: Node): NodeWithPosition[] {
 		const node = doc ?? this.store.getState().doc;
-		const entityNodes = findInlineNodes({
+		return findInlineNodes({
 			node,
 		}).filter(inlineNode => inlineNode.node.type.name === this.name);
+	}
 
-		const entities = entityNodes.map(({ node, pos }) => ({
+	private getAllEntitiesFromDoc(doc?: Node): EntityAttrs[] {
+		const nodes = this.getAllEntityNodesFromDoc(doc);
+		const entities = nodes.map(({ node }) => ({
 			...node.attrs,
-			pos,
 		}));
 
 		return entities;
@@ -209,7 +251,7 @@ export class EntityExtension extends NodeExtension<EntityOptions> {
 	 * Get all entity nodes attributes from the document.
 	 */
 	@helper()
-	getAllEntityNodesAttrs(): Helper<EntityWithPosition[]> {
+	getAllEntityNodesAttrs(): Helper<EntityAttrs[]> {
 		return getEntitiesFromPluginState({
 			extension: this,
 			state: this.store.getState(),
@@ -221,26 +263,10 @@ export class EntityExtension extends NodeExtension<EntityOptions> {
 	 */
 	@helper()
 	getUniqueEntities(): Helper<EntityAttrs[]> {
-		const entities = getEntitiesFromPluginState({
+		return getUniqueEntitiesFromPluginState({
 			extension: this,
 			state: this.store.getState(),
 		});
-		const seen = new Set();
-
-		const calculatedUniqueEntities: EntityAttrs[] = [];
-
-		entities.forEach(({ id, name }) => {
-			if (!seen.has(id)) {
-				calculatedUniqueEntities.push({ id, name });
-				seen.add(id);
-			}
-		});
-
-		// Preserve identity of array to prevent unnecessary rerenders by the caller
-		if (hash(this.uniqueEntities) !== hash(calculatedUniqueEntities)) {
-			this.uniqueEntities = calculatedUniqueEntities;
-		}
-		return this.uniqueEntities;
 	}
 
 	@command()

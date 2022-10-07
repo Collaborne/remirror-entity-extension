@@ -2,13 +2,12 @@ import {
 	EditorComponent,
 	Remirror,
 	useCommands,
-	useHelpers,
 	useRemirror,
 } from '@remirror/react';
 import { uniqueId } from 'remirror';
 import 'remirror/styles/all.css';
 
-import { EntityAttrs, EntityExtension } from '../../src';
+import { EntityExtension } from '../../src';
 
 export default {
 	title: 'Entity extension',
@@ -54,22 +53,6 @@ function NewButton() {
 	return <button onClick={handleClick}>Add new</button>;
 }
 
-let count = 0;
-function Counter({ value }: { value: EntityAttrs[] }) {
-	count++;
-	return (
-		<>
-			{value.length} ({count})
-		</>
-	);
-}
-
-function UniqueEntities() {
-	const { getUniqueEntities } = useHelpers<EntityExtension>();
-	const uniqueEntities = getUniqueEntities();
-	return <Counter value={uniqueEntities} />;
-}
-
 export const Basic = () => {
 	const { manager, state } = useRemirror({
 		content: CONTENT,
@@ -91,7 +74,6 @@ export const Basic = () => {
 					&nbsp;
 					<NewButton />
 				</div>
-				<UniqueEntities />
 			</Remirror>
 		</div>
 	);

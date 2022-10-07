@@ -55,7 +55,6 @@ export interface StateProps {
 }
 
 function computeUniqueEntities(entities: EntityAttrs[]) {
-	console.log('SLOW: Recalc');
 	const uniqueEntitiesById = new Map<string, EntityAttrs>();
 	entities.forEach(({ id, name }) => {
 		uniqueEntitiesById.set(id!, { id, name });

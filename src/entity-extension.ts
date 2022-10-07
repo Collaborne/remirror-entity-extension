@@ -23,21 +23,14 @@ import { ComponentType } from 'react';
 
 import { defaultRenderEntity } from './default-render-component';
 import { hash } from './hash';
-import {
-	EntityAttrs,
-	EntityOptions,
-	EntityState,
-	EntityWithPosition,
-} from './types';
+import { EntityAttrs, EntityOptions, EntityState } from './types';
 
 export const dataAttributeId = 's-id';
 export const dataAttributeName = 's-name';
 
-const getEntitiesFromPluginState = (
-	props: StateProps,
-): EntityWithPosition[] => {
+const getEntitiesFromPluginState = (props: StateProps): EntityAttrs[] => {
 	const { extension, state } = props;
-	const pluginState: { entities: EntityWithPosition[] } =
+	const pluginState: { entities: EntityAttrs[] } =
 		extension.getPluginState(state);
 	return pluginState.entities;
 };
@@ -82,12 +75,20 @@ export class EntityExtension extends NodeExtension<EntityOptions> {
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	ReactComponent: ComponentType<NodeViewComponentProps> = ({
 		node,
-		getPosition,
+		updateAttributes,
 	}) => {
 		const { id, name } = node.attrs;
-		const { render: renderEntity } = this.options as EntityOptions;
 
-		return renderEntity({ id, name, getPosition });
+		const { render: renderEntity } = this.options as EntityOptions;
+		const uniqueEntities = getUniqueEntitiesFromPluginState({
+			extension: this,
+			state: this.store.getState(),
+		});
+		return renderEntity({
+			entity: { id, name },
+			uniqueEntities,
+			updateAttributes,
+		});
 	};
 
 	/**
@@ -187,22 +188,6 @@ export class EntityExtension extends NodeExtension<EntityOptions> {
 		};
 	}
 
-	private updateEntityInPositionCommand(
-		pos: number,
-		attributes: EntityAttrs,
-	): CommandFunction {
-		return ({ tr, dispatch }) => {
-			if (!dispatch) {
-				return true;
-			}
-
-			tr.setNodeMarkup(pos, undefined, attributes);
-
-			dispatch(tr);
-			return true;
-		};
-	}
-
 	private updateEntityByIdCommand(
 		id: string,
 		update: Partial<EntityAttrs>,
@@ -213,17 +198,10 @@ export class EntityExtension extends NodeExtension<EntityOptions> {
 			}
 
 			const nodes = this.getAllEntityNodesFromDoc(tr.doc);
-			const entities: EntityWithPosition[] = nodes.map(({ node, pos }) => ({
-				...node.attrs,
-				pos,
-			}));
-			const sameEntitiesId = entities.filter(entity => entity.id === id);
-
-			if (sameEntitiesId.length === 0) {
-				return true;
-			}
-			sameEntitiesId.forEach(entity => {
-				tr.setNodeMarkup(entity.pos, undefined, update);
+			nodes.forEach(({ node, pos }) => {
+				if (node.attrs.id === id) {
+					tr.setNodeMarkup(pos, undefined, update);
+				}
 			});
 
 			dispatch(tr);
@@ -277,14 +255,6 @@ export class EntityExtension extends NodeExtension<EntityOptions> {
 
 			return true;
 		};
-	}
-
-	@command()
-	updateEntityInPosition(
-		pos: number,
-		attributes: EntityAttrs,
-	): CommandFunction {
-		return this.updateEntityInPositionCommand(pos, attributes);
 	}
 
 	@command()

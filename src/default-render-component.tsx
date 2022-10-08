@@ -11,7 +11,7 @@ interface Item {
 export function EntityComponent({
 	entity,
 	uniqueEntities,
-	updateAttributes,
+	upsertEntity,
 }: EntityComponentProps) {
 	const items: Item[] = useMemo(
 		() => uniqueEntities.map(({ id, name }) => ({ id: id!, name })),
@@ -20,8 +20,9 @@ export function EntityComponent({
 
 	const addEntity = useCallback(() => {
 		const id = uniqueId();
-		updateAttributes({ id, name: id });
-	}, [updateAttributes]);
+		// Insert new entity by passing a non existent id.
+		upsertEntity({ id, name: id });
+	}, [upsertEntity]);
 
 	const handleSelectEntity: ChangeEventHandler<HTMLSelectElement> = useCallback(
 		event => {
@@ -34,10 +35,10 @@ export function EntityComponent({
 				entity => entity.id === entityId,
 			);
 			if (selectedEntity) {
-				updateAttributes({ id: selectedEntity.id, name: selectedEntity.name });
+				upsertEntity({ id: selectedEntity.id, name: selectedEntity.name });
 			}
 		},
-		[uniqueEntities, addEntity, updateAttributes],
+		[uniqueEntities, addEntity, upsertEntity],
 	);
 
 	if (items.length === 0) {

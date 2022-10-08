@@ -87,7 +87,7 @@ export class EntityExtension extends NodeExtension<EntityOptions> {
 		return renderEntity({
 			entity: { id, name },
 			uniqueEntities,
-			updateAttributes,
+			upsertEntity: updateAttributes,
 		});
 	};
 

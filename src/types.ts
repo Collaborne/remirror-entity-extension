@@ -3,7 +3,7 @@ import { ProsemirrorAttributes } from 'remirror';
 export type EntityComponentProps = {
 	// The entity data of this component
 	entity: EntityAttrs;
-	updateAttributes: (attrs: ProsemirrorAttributes<object>) => void;
+	upsertEntity: (attrs: ProsemirrorAttributes<object>) => void;
 	// All unique entities data of the document
 	uniqueEntities: EntityAttrs[];
 };

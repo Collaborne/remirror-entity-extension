@@ -14,6 +14,7 @@ export function EntityComponent({
 	upsertEntity,
 }: EntityComponentProps) {
 	const items: Item[] = useMemo(
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		() => uniqueEntities.map(({ id, name }) => ({ id: id!, name })),
 		[uniqueEntities],
 	);

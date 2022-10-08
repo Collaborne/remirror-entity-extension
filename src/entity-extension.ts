@@ -54,6 +54,7 @@ export interface StateProps {
 function computeUniqueEntities(entities: EntityAttrs[]) {
 	const uniqueEntitiesById = new Map<string, EntityAttrs>();
 	entities.forEach(({ id, name }) => {
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		uniqueEntitiesById.set(id!, { id, name });
 	});
 	return [...uniqueEntitiesById.values()];

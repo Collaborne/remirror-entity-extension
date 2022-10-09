@@ -1,6 +1,6 @@
 {
 	"name": "@collaborne/remirror-entity-extension",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"description": "Extension for remirror.io to store entities",
 	"author": "Collaborne",
 	"license": "Apache-2.0",

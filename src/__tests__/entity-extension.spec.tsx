@@ -39,24 +39,6 @@ describe('entity-extension', () => {
 		});
 	});
 
-	describe('updateEntityInPosition', () => {
-		it('updates entity in position', () => {
-			const item1 = { id: '1', name: 'Name 1' };
-			const item2 = { id: '2', name: 'Name 2' };
-			add(doc(p(entity(item1)(), entity(item2)(), entity(item1)())));
-
-			const newName = 'CHANGED';
-			commands.updateEntityInPosition(1, { ...item1, name: newName });
-
-			const actual = helpers.getAllEntityNodesAttrs();
-			expect(actual[0].name).toEqual(newName);
-			expect(actual[1].name).toEqual(item2.name);
-			// XXX: I wouldn't have expected this! Now, we have item with the same ID ('1') but
-			// two different names ('Name 1' and 'CHANGED')
-			expect(actual[2].name).toEqual(item1.name);
-		});
-	});
-
 	describe('updateEntityById', () => {
 		it('updates all entities with the same ID', () => {
 			const item1 = { id: '1', name: 'Name 1' };

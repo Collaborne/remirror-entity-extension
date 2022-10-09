@@ -1,12 +1,11 @@
-/**
- * Retrieve the position of the current nodeView
- */
-type GetPosition = (() => number) | boolean;
+import { ProsemirrorAttributes } from 'remirror';
 
 export type EntityComponentProps = {
-	id: string;
-	name: string;
-	getPosition: GetPosition;
+	// The entity data of this component
+	entity: EntityAttrs;
+	upsertEntity: (attrs: ProsemirrorAttributes<object>) => void;
+	// All unique entities data of the document
+	uniqueEntities: EntityAttrs[];
 };
 export type RenderEntity = (args: EntityComponentProps) => JSX.Element | null;
 
@@ -20,8 +19,6 @@ export interface EntityAttrs {
 }
 
 export type EntityId = string;
-
-export type EntityWithPosition = EntityAttrs & { pos: number };
 
 export interface EntityState {
 	entities: EntityAttrs[];

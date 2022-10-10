@@ -60,6 +60,14 @@ export function EntityComponent({
 	);
 }
 
-export const defaultRenderEntity: RenderEntity = props => (
-	<EntityComponent {...props} />
+export const defaultRenderEntity: RenderEntity = ({
+	entity,
+	uniqueEntities,
+	upsertEntity,
+}) => (
+	<EntityComponent
+		entity={entity}
+		uniqueEntities={uniqueEntities}
+		upsertEntity={upsertEntity}
+	/>
 );

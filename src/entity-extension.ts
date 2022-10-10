@@ -76,15 +76,13 @@ export class EntityExtension extends NodeExtension<EntityOptions> {
 		node,
 		updateAttributes,
 	}) => {
-		const { id, name } = node.attrs;
-
 		const { render: renderEntity } = this.options as EntityOptions;
 		const uniqueEntities = getUniqueEntitiesFromPluginState({
 			extension: this,
 			state: this.store.getState(),
 		});
 		return renderEntity({
-			entity: { id, name },
+			entity: node.attrs as EntityAttrs,
 			uniqueEntities,
 			upsertEntity: updateAttributes,
 		});

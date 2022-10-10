@@ -5,14 +5,12 @@ import {
 	CreateExtensionPlugin,
 	extension,
 	ExtensionTag,
-	findInlineNodes,
 	Helper,
 	helper,
 	isElementDomNode,
 	NodeExtension,
 	NodeExtensionSpec,
 	NodeSpecOverride,
-	NodeWithPosition,
 	omitExtraAttributes,
 	Transaction,
 } from '@remirror/core';
@@ -110,7 +108,7 @@ export class EntityExtension extends NodeExtension<EntityOptions> {
 					_oldState: EditorState,
 					newState: EditorState,
 				): EntityState => {
-					if (!tr.steps) {
+					if (!tr.docChanged) {
 						// Moving the cursor won't impact entities
 						return oldEntityState;
 					}
@@ -198,11 +196,11 @@ export class EntityExtension extends NodeExtension<EntityOptions> {
 				return true;
 			}
 
-			const nodes = this.getAllEntityNodesFromDoc(tr.doc);
-			nodes.forEach(({ node, pos }) => {
-				if (node.attrs.id === id) {
+			tr.doc.descendants((node: Node, pos: number) => {
+				if (node.type.name === this.name && node.attrs.id === id) {
 					tr.setNodeMarkup(pos, undefined, update);
 				}
+				return true;
 			});
 
 			dispatch(tr);
@@ -210,19 +208,16 @@ export class EntityExtension extends NodeExtension<EntityOptions> {
 		};
 	}
 
-	private getAllEntityNodesFromDoc(doc?: Node): NodeWithPosition[] {
-		const node = doc ?? this.store.getState().doc;
-		return findInlineNodes({
-			node,
-		}).filter(inlineNode => inlineNode.node.type.name === this.name);
-	}
-
 	private getAllEntitiesFromDoc(doc?: Node): EntityAttrs[] {
-		const nodes = this.getAllEntityNodesFromDoc(doc);
-		const entities = nodes.map(({ node }) => ({
-			...node.attrs,
-		}));
+		const parentNode = doc ?? this.store.getState().doc;
+		const entities: EntityAttrs[] = [];
+		parentNode.descendants((node: Node) => {
+			if (node.type.name === this.name) {
+				entities.push(node.attrs);
+			}
 
+			return true;
+		});
 		return entities;
 	}
 

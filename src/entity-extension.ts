@@ -3,6 +3,7 @@ import {
 	command,
 	CommandFunction,
 	CreateExtensionPlugin,
+	extension,
 	ExtensionTag,
 	Helper,
 	helper,
@@ -12,7 +13,6 @@ import {
 	NodeSpecOverride,
 	omitExtraAttributes,
 	Transaction,
-	extension,
 } from '@remirror/core';
 import { Node } from '@remirror/pm/dist-types/model';
 import { EditorState, EditorStateConfig } from '@remirror/pm/dist-types/state';
@@ -20,8 +20,8 @@ import { NodeViewComponentProps } from '@remirror/react';
 import { ComponentType } from 'react';
 
 import { defaultRenderEntity } from './default-render-component';
+import { isSameArray } from './is-same-array';
 import { EntityAttrs, EntityOptions, EntityState } from './types';
-import { uniqueEntitiesAreSame } from './unique-entities-are-same';
 
 export const dataAttributeId = 's-id';
 export const dataAttributeName = 's-name';
@@ -32,6 +32,9 @@ const getUniqueEntitiesFromPluginState = (props: StateProps): EntityAttrs[] => {
 		extension.getPluginState(state);
 	return pluginState.uniqueEntities;
 };
+
+const isSameEntity = (a: EntityAttrs, b: EntityAttrs) =>
+	a.id === b.id && a.name === b.name;
 
 export interface StateProps {
 	extension: EntityExtension;
@@ -86,9 +89,10 @@ export class EntityExtension extends NodeExtension<EntityOptions> {
 					}
 					const uniqueEntities = this.getUniqueEntitiesFromDoc(tr.doc);
 
-					const same = uniqueEntitiesAreSame(
+					const same = isSameArray(
 						uniqueEntities,
 						oldEntityState.uniqueEntities,
+						isSameEntity,
 					);
 					// Preserve identity of array to prevent unnecessary rerenders by the caller
 					if (!same) {

@@ -17,17 +17,6 @@ const {
 } = setupEditor();
 
 describe('entity-extension', () => {
-	describe('getAllEntityNodesAttrs', () => {
-		it('returns all entities with their position', () => {
-			const item1 = { id: '1', name: 'Name 1' };
-			const item2 = { id: '2', name: 'Name 2' };
-			add(doc(p(entity(item1)(), entity(item2)(), entity(item1)())));
-
-			const actual = helpers.getAllEntityNodesAttrs();
-			expect(actual).toEqual([item1, item2, item1]);
-		});
-	});
-
 	describe('getUniqueEntities', () => {
 		it('deduplicates entities', () => {
 			const item1 = { id: '1', name: 'Name 1' };
@@ -48,10 +37,9 @@ describe('entity-extension', () => {
 			const newName = 'CHANGED';
 			commands.updateEntityById(item1.id, { ...item1, name: newName });
 
-			const actual = helpers.getAllEntityNodesAttrs();
+			const actual = helpers.getUniqueEntities();
 			expect(actual[0].name).toEqual(newName);
 			expect(actual[1].name).toEqual(item2.name);
-			expect(actual[2].name).toEqual(newName);
 		});
 
 		it('ignores updates on non-existing entities', () => {
@@ -60,7 +48,7 @@ describe('entity-extension', () => {
 
 			commands.updateEntityById('other', { id: 'other', name: 'other' });
 
-			const actual = helpers.getAllEntityNodesAttrs();
+			const actual = helpers.getUniqueEntities();
 			expect(actual[0].name).toEqual(item1.name);
 		});
 	});

@@ -21,6 +21,5 @@ export interface EntityAttrs {
 export type EntityId = string;
 
 export interface EntityState {
-	entities: EntityAttrs[];
 	uniqueEntities: EntityAttrs[];
 }

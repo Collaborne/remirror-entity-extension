@@ -20,18 +20,11 @@ import { NodeViewComponentProps } from '@remirror/react';
 import { ComponentType } from 'react';
 
 import { defaultRenderEntity } from './default-render-component';
-import { hash } from './hash';
+import { isSameArray } from './is-same-array';
 import { EntityAttrs, EntityOptions, EntityState } from './types';
 
 export const dataAttributeId = 's-id';
 export const dataAttributeName = 's-name';
-
-const getEntitiesFromPluginState = (props: StateProps): EntityAttrs[] => {
-	const { extension, state } = props;
-	const pluginState: { entities: EntityAttrs[] } =
-		extension.getPluginState(state);
-	return pluginState.entities;
-};
 
 const getUniqueEntitiesFromPluginState = (props: StateProps): EntityAttrs[] => {
 	const { extension, state } = props;
@@ -40,22 +33,12 @@ const getUniqueEntitiesFromPluginState = (props: StateProps): EntityAttrs[] => {
 	return pluginState.uniqueEntities;
 };
 
-// Check equality of values to preserve identity of array to prevent unnecessary rerenders by the caller
-function isSame<T>(array: T[], newArray: T[]) {
-	return hash(newArray) === hash(array);
-}
+const isSameEntity = (a: EntityAttrs, b: EntityAttrs) =>
+	a.id === b.id && a.name === b.name;
+
 export interface StateProps {
 	extension: EntityExtension;
 	state: EditorState;
-}
-
-function computeUniqueEntities(entities: EntityAttrs[]) {
-	const uniqueEntitiesById = new Map<string, EntityAttrs>();
-	entities.forEach(({ id, name }) => {
-		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		uniqueEntitiesById.set(id!, { id, name });
-	});
-	return [...uniqueEntitiesById.values()];
 }
 
 /**
@@ -95,37 +78,28 @@ export class EntityExtension extends NodeExtension<EntityOptions> {
 		return {
 			state: {
 				init: (_: EditorStateConfig, state: EditorState): EntityState => {
-					const entities = this.getAllEntitiesFromDoc(state.doc);
-					const uniqueEntities = computeUniqueEntities(entities);
-					return { entities, uniqueEntities };
+					const uniqueEntities = this.getUniqueEntitiesFromDoc(state.doc);
+					return { uniqueEntities };
 				},
 
-				apply: (
-					tr: Transaction,
-					oldEntityState: EntityState,
-					_oldState: EditorState,
-					newState: EditorState,
-				): EntityState => {
+				apply: (tr: Transaction, oldEntityState: EntityState): EntityState => {
 					if (!tr.docChanged) {
 						// Moving the cursor won't impact entities
 						return oldEntityState;
 					}
+					const uniqueEntities = this.getUniqueEntitiesFromDoc(tr.doc);
 
-					const entities = this.getAllEntitiesFromDoc(newState.doc);
-					if (isSame(entities, oldEntityState.entities)) {
-						// No changes
-						return oldEntityState;
-					}
-
-					let uniqueEntities = computeUniqueEntities(entities);
-
+					const same = isSameArray(
+						uniqueEntities,
+						oldEntityState.uniqueEntities,
+						isSameEntity,
+					);
 					// Preserve identity of array to prevent unnecessary rerenders by the caller
-					if (isSame(uniqueEntities, oldEntityState.uniqueEntities)) {
+					if (!same) {
 						// Preserve array instance
-						uniqueEntities = oldEntityState.uniqueEntities;
+						return { uniqueEntities };
 					}
-
-					return { entities, uniqueEntities };
+					return oldEntityState;
 				},
 			},
 		};
@@ -206,28 +180,20 @@ export class EntityExtension extends NodeExtension<EntityOptions> {
 		};
 	}
 
-	private getAllEntitiesFromDoc(doc?: Node): EntityAttrs[] {
+	private getUniqueEntitiesFromDoc(doc?: Node): EntityAttrs[] {
 		const parentNode = doc ?? this.store.getState().doc;
-		const entities: EntityAttrs[] = [];
+		const uniqueEntitiesById = new Map<string, EntityAttrs>();
 		parentNode.descendants((node: Node) => {
-			if (node.type.name === this.name) {
-				entities.push(node.attrs);
-			}
+			if (node.isAtom && node.type.name === this.name) {
+				const { id, name } = node.attrs;
+				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+				uniqueEntitiesById.set(id!, { id, name });
 
+				return false;
+			}
 			return true;
 		});
-		return entities;
-	}
-
-	/**
-	 * Get all entity nodes attributes from the document.
-	 */
-	@helper()
-	getAllEntityNodesAttrs(): Helper<EntityAttrs[]> {
-		return getEntitiesFromPluginState({
-			extension: this,
-			state: this.store.getState(),
-		});
+		return [...uniqueEntitiesById.values()];
 	}
 
 	/**

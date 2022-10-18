@@ -1,2 +1,2 @@
 export * from './entity-extension';
-export type { EntityAttrs } from './types';
+export type { EntityAttrs, RenderEntity } from './types';
